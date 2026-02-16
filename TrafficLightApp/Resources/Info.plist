@@ -6,12 +6,6 @@
     <string>DriveSense</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
-    <key>CFBundleDevelopmentRegion</key>
-    <string>en</string>
-    <key>CFBundleLocalizations</key>
-    <array>
-        <string>en</string>
-    </array>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>

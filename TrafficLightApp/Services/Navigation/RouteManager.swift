@@ -3,9 +3,7 @@ import Foundation
 import MapKit
 
 protocol RouteManaging {
-    func updateSearchQuery(_ query: String)
-    func latestSearchResults() -> [MKLocalSearchCompletion]
-    func resolveCompletion(_ completion: MKLocalSearchCompletion) async throws -> MKMapItem
+    func searchCompletions(for query: String) -> [String]
     func calculateRoute(from source: CLLocationCoordinate2D,
                         to destination: MKMapItem,
                         preference: RoutePreference) async throws -> MKRoute
