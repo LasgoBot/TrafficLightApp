@@ -8,6 +8,7 @@ struct TelematicsExampleView: View {
     
     @State private var events: [String] = []
     @State private var isMonitoring = false
+    @State private var cancellables = Set<AnyCancellable>()
     
     var body: some View {
         NavigationView {
@@ -132,6 +133,7 @@ struct TelematicsExampleView: View {
                     }
                 }
             }
+            .store(in: &cancellables)
     }
     
     private func addEvent(_ event: String) {
