@@ -163,8 +163,13 @@ final class TelematicsService: ObservableObject {
                 if let activityManager = liveActivityManager as? LiveActivityManager {
                     // Delay ending activity to show green state briefly
                     Task {
-                        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
-                        activityManager.endActivity()
+                        do {
+                            try await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
+                            activityManager.endActivity()
+                        } catch {
+                            // Task was cancelled (e.g., app backgrounded) - end activity immediately
+                            activityManager.endActivity()
+                        }
                     }
                 }
             }

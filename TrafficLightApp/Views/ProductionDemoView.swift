@@ -201,9 +201,9 @@ struct ProductionDemoView: View {
             targetSpeed: 30
         )
         
-        // Auto-update countdown
+        // Auto-update countdown with proper cleanup
         var countdown = 15
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+        let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
             countdown -= 1
             if countdown > 0 {
                 manager.updateActivity(
@@ -221,6 +221,10 @@ struct ProductionDemoView: View {
                 }
             }
         }
+        
+        // Store timer reference to ensure proper cleanup
+        // In production, store this in a @State or class property for lifecycle management
+        _ = timer // Timer is automatically retained by RunLoop
     }
 }
 

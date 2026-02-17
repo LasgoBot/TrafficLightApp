@@ -25,7 +25,24 @@ final class DataController: ObservableObject {
             context = ModelContext(container)
             context.autosaveEnabled = true
         } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
+            // Log error and fall back to in-memory container for development/testing
+            print("⚠️ Failed to create persistent ModelContainer: \(error)")
+            print("⚠️ Falling back to in-memory storage")
+            
+            let inMemoryConfiguration = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: true,
+                allowsSave: true
+            )
+            
+            do {
+                container = try ModelContainer(for: schema, configurations: [inMemoryConfiguration])
+                context = ModelContext(container)
+                context.autosaveEnabled = true
+            } catch {
+                // This should never happen, but if it does, log and crash with clear message
+                fatalError("Unable to create even in-memory ModelContainer. This is a critical error: \(error)")
+            }
         }
     }
     

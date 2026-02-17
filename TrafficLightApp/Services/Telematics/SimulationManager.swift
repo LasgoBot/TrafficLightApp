@@ -209,9 +209,9 @@ final class SimulationManager: ObservableObject {
     }
     
     private func printSimulationResults() async {
-        log("\n" + "="*50)
+        log("\n" + String(repeating: "=", count: 50))
         log("📊 SIMULATION RESULTS")
-        log("="*50)
+        log(String(repeating: "=", count: 50))
         
         // Check SwiftData for the learned node
         let dataController = DataController.shared
@@ -228,7 +228,7 @@ final class SimulationManager: ObservableObject {
             log("⚠️ Node not found in SwiftData")
         }
         
-        log("="*50 + "\n")
+        log(String(repeating: "=", count: 50) + "\n")
     }
     
     private func log(_ message: String) {
@@ -236,12 +236,5 @@ final class SimulationManager: ObservableObject {
         let logMessage = "[\(timestamp)] \(message)"
         print(logMessage)
         simulationLog.append(logMessage)
-    }
-}
-
-// String extension for repeating characters
-private extension String {
-    static func *(lhs: String, rhs: Int) -> String {
-        return String(repeating: lhs, count: rhs)
     }
 }
