@@ -13,7 +13,7 @@ final class TelematicsManager: NSObject, ObservableObject {
     let eventPublisher = PassthroughSubject<TelematicsEvent, Never>()
     
     // MARK: - Private Properties
-    private let locationManager = CLLocationManager()
+    let locationManager = CLLocationManager() // Made internal for simulation
     private let motionManager = CMMotionManager()
     private let operationQueue = OperationQueue()
     
