@@ -2,10 +2,14 @@ import CoreLocation
 import Foundation
 
 actor TelematicsObservationEngine: TrafficLightObservationProviding {
+    // MARK: - Constants
+    private let estimatedGreenPhaseFraction: Double = 0.3 // Assume 30% of cycle is green phase
+    
+    // MARK: - Properties
     private let nodeService: TrafficNodeService
     private let phasePredictor: SignalPhasePredictor
     
-    init(nodeService: TrafficNodeService = TrafficNodeService(),
+    // MARK: - Initialization
          phasePredictor: SignalPhasePredictor = SignalPhasePredictor()) {
         self.nodeService = nodeService
         self.phasePredictor = phasePredictor
@@ -49,8 +53,8 @@ actor TelematicsObservationEngine: TrafficLightObservationProviding {
         if timeToGreen <= 0 {
             // Currently green or just turned green
             phase = .green
-            // Estimate green phase duration (assume 30% of cycle is green)
-            let estimatedGreenDuration = prediction.cycleLength * 0.3
+            // Estimate green phase duration
+            let estimatedGreenDuration = prediction.cycleLength * estimatedGreenPhaseFraction
             phaseEndsAt = now.addingTimeInterval(estimatedGreenDuration)
         } else if timeToGreen <= 5 {
             // About to turn green (yellow from other direction)

@@ -10,8 +10,12 @@ actor SignalPhasePredictor: SignalPhasePredicting {
     private var patterns: [String: SignalCyclePattern] = [:]
     private var isLoaded = false
     
+    // MARK: - Constants
     private let minimumObservations = 3
     private let maxObservations = 100
+    private let minimumCycleLength: TimeInterval = 15 // Shortest realistic traffic light cycle
+    private let maximumCycleLength: TimeInterval = 180 // Longest realistic traffic light cycle
+    private let maxAcceptableDeviation: TimeInterval = 5.0 // Maximum timing deviation for high confidence
     
     init(storage: SignalPhaseStorage = SignalPhaseStorage()) {
         self.storage = storage
@@ -108,8 +112,8 @@ actor SignalPhasePredictor: SignalPhasePredicting {
             let interval = sortedObservations[i].greenLaunchTime.timeIntervalSince(
                 sortedObservations[i-1].greenLaunchTime
             )
-            // Only consider intervals that look like signal cycles (15-180 seconds)
-            if interval >= 15 && interval <= 180 {
+            // Only consider intervals that look like signal cycles
+            if interval >= minimumCycleLength && interval <= maximumCycleLength {
                 intervals.append(interval)
             }
         }
@@ -180,8 +184,6 @@ actor SignalPhasePredictor: SignalPhasePredicting {
         let avgDeviation = deviations.reduce(0, +) / Double(deviations.count)
         
         // Convert to confidence (lower deviation = higher confidence)
-        // Allow up to 5 seconds deviation for high confidence
-        let maxAcceptableDeviation: TimeInterval = 5.0
         let confidence = max(0.0, 1.0 - (avgDeviation / maxAcceptableDeviation))
         
         // Boost confidence with more observations

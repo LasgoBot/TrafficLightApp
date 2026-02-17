@@ -278,8 +278,8 @@ If telematics predictions are poor:
 1. Check if user has granted "Always" location permission
 2. Verify motion data is available
 3. Ensure sufficient observations (≥3 per signal)
-3. Check cache for nearby traffic nodes
-4. Fall back to camera or remote service
+4. Check cache for nearby traffic nodes
+5. Fall back to camera or remote service
 
 ## Next Steps
 

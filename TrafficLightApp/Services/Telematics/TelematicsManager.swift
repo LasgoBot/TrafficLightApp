@@ -32,7 +32,8 @@ final class TelematicsManager: NSObject, ObservableObject {
     private let minimumStopDuration: TimeInterval = 2.0 // seconds
     
     // MARK: - Initialization
-    init() {
+    override init() {
+        super.init()
         setupLocationManager()
         setupMotionManager()
     }

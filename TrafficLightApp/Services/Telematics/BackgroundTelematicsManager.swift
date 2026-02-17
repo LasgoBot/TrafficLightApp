@@ -10,10 +10,15 @@ final class BackgroundTelematicsManager: NSObject, ObservableObject {
     @Published private(set) var isBackgroundEnabled = false
     
     // MARK: - Initialization
-    init(telematicsService: TelematicsService = TelematicsService()) {
+    init(telematicsService: TelematicsService) {
         self.telematicsService = telematicsService
         super.init()
         setupLocationManager()
+    }
+    
+    // Convenience initializer for standalone use
+    convenience init() {
+        self.init(telematicsService: TelematicsService())
     }
     
     // MARK: - Public Methods
