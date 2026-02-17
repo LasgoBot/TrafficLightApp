@@ -8,19 +8,19 @@ protocol SignalPhasePredicting {
 actor SignalPhasePredictor: SignalPhasePredicting {
     private let storage: SignalPhaseStorage
     private var patterns: [String: SignalCyclePattern] = [:]
+    private var isLoaded = false
     
     private let minimumObservations = 3
     private let maxObservations = 100
     
     init(storage: SignalPhaseStorage = SignalPhaseStorage()) {
         self.storage = storage
-        Task {
-            await loadPatterns()
-        }
     }
     
     // MARK: - Public Methods
     func recordGreenLaunch(nodeID: String, timestamp: Date) async {
+        await ensureLoaded()
+        
         let observation = SignalPhaseObservation(nodeID: nodeID, greenLaunchTime: timestamp)
         
         var pattern = patterns[nodeID] ?? SignalCyclePattern(nodeID: nodeID)
@@ -40,6 +40,8 @@ actor SignalPhasePredictor: SignalPhasePredicting {
     }
     
     func predictNextGreen(nodeID: String, currentTime: Date = Date()) async -> SignalPrediction? {
+        await ensureLoaded()
+        
         guard let pattern = patterns[nodeID],
               let cycleLength = pattern.cycleLength,
               let cycleOffset = pattern.cycleOffset,
@@ -79,6 +81,12 @@ actor SignalPhasePredictor: SignalPhasePredicting {
     }
     
     // MARK: - Private Methods
+    private func ensureLoaded() async {
+        guard !isLoaded else { return }
+        await loadPatterns()
+        isLoaded = true
+    }
+    
     private func loadPatterns() async {
         patterns = await storage.loadAllPatterns()
     }

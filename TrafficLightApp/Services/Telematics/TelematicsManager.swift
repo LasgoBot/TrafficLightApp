@@ -4,7 +4,7 @@ import CoreMotion
 import Foundation
 
 @MainActor
-final class TelematicsManager: ObservableObject {
+final class TelematicsManager: NSObject, ObservableObject {
     // MARK: - Published Properties
     @Published private(set) var currentState: VehicleState?
     @Published private(set) var lastEvent: TelematicsEvent?
@@ -152,7 +152,7 @@ final class TelematicsManager: ObservableObject {
 }
 
 // MARK: - CLLocationManagerDelegate
-extension TelematicsManager: NSObject, CLLocationManagerDelegate {
+extension TelematicsManager: CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         
