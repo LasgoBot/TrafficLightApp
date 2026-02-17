@@ -1,0 +1,5 @@
+"onboarding.title" = "Welcome to DriveSense";
+"onboarding.disclaimer" = "Driver remains responsible for safe operation at all times. This app provides assistive navigation and detection only.";
+"settings.title" = "Settings";
+"permission.camera.required" = "Camera permission is required for detection overlays.";
+"permission.settings.hint" = "Enable permissions in Settings > Privacy.";

@@ -9,18 +9,32 @@ protocol RouteManaging {
                         preference: RoutePreference) async throws -> MKRoute
 }
 
-final class RouteManager: RouteManaging {
-    private var recentQueries: [String] = []
+@MainActor
+final class RouteManager: NSObject, RouteManaging {
+    private let completer = MKLocalSearchCompleter()
+    private var cachedResults: [MKLocalSearchCompletion] = []
 
-    func searchCompletions(for query: String) -> [String] {
-        guard !query.isEmpty else { return recentQueries }
-        let mock = ["Home", "Work", "Airport", "Downtown", "Parking Garage"]
-        let filtered = mock.filter { $0.localizedCaseInsensitiveContains(query) }
-        if let first = filtered.first, !recentQueries.contains(first) {
-            recentQueries.insert(first, at: 0)
-            recentQueries = Array(recentQueries.prefix(10))
+    override init() {
+        super.init()
+        completer.resultTypes = [.address, .pointOfInterest, .query]
+        completer.delegate = self
+    }
+
+    func updateSearchQuery(_ query: String) {
+        completer.queryFragment = query
+    }
+
+    func latestSearchResults() -> [MKLocalSearchCompletion] {
+        cachedResults
+    }
+
+    func resolveCompletion(_ completion: MKLocalSearchCompletion) async throws -> MKMapItem {
+        let request = MKLocalSearch.Request(completion: completion)
+        let response = try await MKLocalSearch(request: request).start()
+        guard let first = response.mapItems.first else {
+            throw NSError(domain: "RouteManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "No matching destination found"])
         }
-        return filtered
+        return first
     }
 
     func calculateRoute(from source: CLLocationCoordinate2D,
@@ -32,16 +46,9 @@ final class RouteManager: RouteManaging {
         request.transportType = .automobile
         request.requestsAlternateRoutes = true
 
-        switch preference {
-        case .avoidHighways:
-            request.transportType = .automobile
-        case .fastest, .shortest:
-            break
-        }
-
         let response = try await MKDirections(request: request).calculate()
         guard let selected = selectRoute(from: response.routes, preference: preference) else {
-            throw NSError(domain: "RouteManager", code: 404)
+            throw NSError(domain: "RouteManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "No route available"])
         }
         return selected
     }
@@ -53,7 +60,17 @@ final class RouteManager: RouteManaging {
         case .shortest:
             return routes.min(by: { $0.distance < $1.distance })
         case .avoidHighways:
-            return routes.first
+            return routes.sorted(by: { $0.advisoryNotices.count < $1.advisoryNotices.count }).first
         }
+    }
+}
+
+extension RouteManager: MKLocalSearchCompleterDelegate {
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        cachedResults = completer.results
+    }
+
+    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+        cachedResults = []
     }
 }

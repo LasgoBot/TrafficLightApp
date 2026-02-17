@@ -9,8 +9,10 @@ final class NavigationViewModel: ObservableObject {
     @Published var route: MKRoute?
     @Published var routePreference: RoutePreference = .fastest
     @Published var searchQuery = ""
-    @Published var searchResults: [String] = []
+    @Published var searchResults: [MKLocalSearchCompletion] = []
+    @Published var searchError: String?
     @Published var recent: [FavoriteLocation] = []
+    @Published var voiceGuidanceEnabled = true
 
     let locationManager = LocationManager()
 
@@ -29,12 +31,25 @@ final class NavigationViewModel: ObservableObject {
     }
 
     func updateSearch() {
-        searchResults = routeManager.searchCompletions(for: searchQuery)
+        routeManager.updateSearchQuery(searchQuery)
+        searchResults = routeManager.latestSearchResults()
+    }
+
+    func setDestination(completion: MKLocalSearchCompletion) async {
+        do {
+            let mapItem = try await routeManager.resolveCompletion(completion)
+            await setDestination(mapItem)
+        } catch {
+            searchError = "Could not resolve destination."
+        }
     }
 
     func setDestination(_ item: MKMapItem) async {
         model.destination = item
-        guard let source = locationManager.location?.coordinate else { return }
+        guard let source = locationManager.location?.coordinate else {
+            searchError = "Current location unavailable."
+            return
+        }
 
         do {
             let route = try await routeManager.calculateRoute(from: source, to: item, preference: routePreference)
@@ -45,8 +60,12 @@ final class NavigationViewModel: ObservableObject {
                 model.nextInstruction = firstStep.instructions
                 model.nextInstructionDistanceMeters = firstStep.distance
             }
-            speechManager.speak("Route started. \(model.nextInstruction)", enabled: true)
+            model.speedLimitKPH = inferSpeedLimit(from: route)
+            persistRecent(mapItem: item)
+            searchError = nil
+            speechManager.speak("Route started. \(model.nextInstruction)", enabled: voiceGuidanceEnabled)
         } catch {
+            searchError = "Unable to route to selected destination."
             model.nextInstruction = "Unable to route."
         }
     }
@@ -65,7 +84,23 @@ final class NavigationViewModel: ObservableObject {
         let offRoute = !routeLine.insetBy(dx: -200, dy: -200).contains(current)
         if offRoute {
             await setDestination(destination)
-            speechManager.speak("Rerouting", enabled: true)
+            speechManager.speak("Rerouting", enabled: voiceGuidanceEnabled)
         }
+    }
+
+    private func inferSpeedLimit(from route: MKRoute) -> Double {
+        if route.distance < 3000 { return 35 }
+        if route.distance < 8000 { return 50 }
+        return 65
+    }
+
+    private func persistRecent(mapItem: MKMapItem) {
+        let entry = FavoriteLocation(id: UUID(),
+                                     title: mapItem.name ?? "Destination",
+                                     latitude: mapItem.placemark.coordinate.latitude,
+                                     longitude: mapItem.placemark.coordinate.longitude)
+        recent.removeAll(where: { $0.title == entry.title })
+        recent.insert(entry, at: 0)
+        recent = Array(recent.prefix(8))
     }
 }

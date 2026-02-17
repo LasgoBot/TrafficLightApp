@@ -25,6 +25,7 @@ struct NavigationView: View {
                 } label: {
                     Image(systemName: "magnifyingglass")
                 }
+                .accessibilityLabel("Search destination")
             }
         }
         .sheet(isPresented: $showSearch) {
@@ -78,18 +79,49 @@ struct NavigationView: View {
         NavigationStack {
             List {
                 TextField("Search destination", text: $navigationViewModel.searchQuery)
-                    .onChange(of: navigationViewModel.searchQuery) {
+                    .onChange(of: navigationViewModel.searchQuery) { _ in
                         navigationViewModel.updateSearch()
                     }
 
-                ForEach(navigationViewModel.searchResults, id: \.self) { result in
-                    Button(result) {
-                        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.7749,
-                                                                                                         longitude: -122.4194)))
-                        mapItem.name = result
-                        Task {
-                            await navigationViewModel.setDestination(mapItem)
-                            showSearch = false
+                if let error = navigationViewModel.searchError {
+                    Text(error)
+                        .foregroundStyle(.red)
+                }
+
+                if !navigationViewModel.recent.isEmpty {
+                    Section("Recent") {
+                        ForEach(navigationViewModel.recent) { place in
+                            Button(place.title) {
+                                let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: place.latitude,
+                                                                                                                 longitude: place.longitude)))
+                                mapItem.name = place.title
+                                Task {
+                                    await navigationViewModel.setDestination(mapItem)
+                                    showSearch = false
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Section("Suggestions") {
+                    ForEach(navigationViewModel.searchResults, id: \.self) { completion in
+                        Button {
+                            Task {
+                                await navigationViewModel.setDestination(completion: completion)
+                                if navigationViewModel.searchError == nil {
+                                    showSearch = false
+                                }
+                            }
+                        } label: {
+                            VStack(alignment: .leading) {
+                                Text(completion.title)
+                                if !completion.subtitle.isEmpty {
+                                    Text(completion.subtitle)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                         }
                     }
                 }

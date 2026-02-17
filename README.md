@@ -1,79 +1,76 @@
 # DriveSense - Intelligent Navigation & Traffic AI (iOS 15+)
 
-Premium daily-driving app blending navigation and camera AI assistance:
-- Traffic light detection with confidence-gated countdown cues (`3, 2, 1`)
-- Lane/sign/vehicle/speed-limit overlays
-- Turn-by-turn navigation with rerouting, ETA, route preferences, and voice prompts
-- Waze-style map + camera toggle with optional picture-in-picture map
+DriveSense is a premium driving-assistance app foundation combining:
+- Camera-based lane/sign/vehicle/speed-limit overlays
+- Traffic-light state detection with confidence-gated countdown cues
+- Turn-by-turn navigation with rerouting and voice guidance
+- Camera ↔ map mode switching with optional map picture-in-picture
 
-## What was improved in this production pass
+## What was fixed in this hardening pass
 
-- Added requested architecture modules:
-  - `Models/DetectionModel.swift`
-  - `Models/NavigationModel.swift`
-  - `Models/TrafficLightModel.swift`
-  - `ViewModels/CameraViewModel.swift`
-  - `ViewModels/NavigationViewModel.swift`
-  - `ViewModels/MapViewModel.swift`
-  - `Services/LocationManager.swift`
-  - `Services/CameraManager.swift`
-  - `Services/VisionManager.swift`
-  - `Services/Navigation/RouteManager.swift`
-  - `Services/Navigation/SpeechManager.swift`
-- Added mandatory onboarding disclaimer acceptance on first launch.
-- Added improved settings for toggles, sensitivity, voice guidance, route preference, units, map mode.
-- Added map-first navigation screen with search/autocomplete scaffold, rerouting hooks, and speed vs speed-limit display.
+### 1) Navigation quality upgrades
+- Replaced mock autocomplete with `MKLocalSearchCompleter`-backed suggestions.
+- Added completion resolution (`MKLocalSearch`) to obtain real `MKMapItem` destinations.
+- Improved route error handling and persisted recent destinations.
 
-## App Store compliance included
+### 2) Safety and UX reliability
+- Added explicit camera permission gate before starting capture.
+- Added permission error overlays and better accessibility labels on controls.
+- Added first-launch mandatory disclaimer acceptance that cannot be dismissed.
+- Wired settings voice-guidance toggle into spoken route instructions.
 
-- `Info.plist` keys:
-  - `NSCameraUsageDescription`: "Camera access required for real-time traffic detection and safety features"
-  - `NSLocationWhenInUseUsageDescription`: "Location access required for navigation and speed limit detection"
-  - `NSLocationAlwaysAndWhenInUseUsageDescription`: "Continuous location for turn-by-turn navigation"
-  - `NSMotionUsageDescription`: "Motion data helps improve detection accuracy"
-- Background modes configured: location + audio.
-- Privacy manifest scaffold (`PrivacyInfo.xcprivacy`) for iOS 17+.
+### 3) Product readiness and localization scaffold
+- Added base localization setup (`en.lproj/Localizable.strings`).
+- Added development region/localization keys in `Info.plist`.
+- Expanded Xcode/App Store packaging guidance below.
 
-## Performance strategy
+## Important reality check before App Store
 
-- Frame skipping (`FrameRateGovernor`) to sustain real-time performance under load.
-- Camera output discards late frames for stability.
-- Main UI kept responsive while detection runs on background processing queues.
-- Reliability message appears when confidence/conditions degrade.
+This repo is now a strong production scaffold, but **not final App Store gold** until you complete:
+1. Integrate real `.mlmodel` files for traffic lights, lane segmentation, sign/speed-limit, and vehicle distance.
+2. Run on-device real-world validation (day/night/rain/glare) with measured precision/recall.
+3. Add a proper Xcode project (`.xcodeproj`) and include all target memberships/resources.
+4. Complete legal/privacy docs in App Store Connect (privacy policy URL + support URL).
 
-## CoreML status
+## How to get this into Xcode (first-time Codex user guide)
 
-The code now provides a clear `VisionManager` integration seam for `VNCoreMLRequest`.
-Current implementation uses a production-safe proxy detector scaffold in this repo (no binary ML model files committed yet).
-To finalize launch-grade recognition, plug in trained `.mlmodel` assets for:
-1. Traffic light state classification
-2. Lane segmentation
-3. Traffic sign + speed-limit detection
-4. Vehicle detection and distance estimation
+1. Open Xcode → **File > New > Project > iOS App**.
+2. Name: `DriveSense`, Interface: SwiftUI, Language: Swift, iOS target: 15.0+.
+3. Copy `TrafficLightApp/` and `TrafficLightAppTests/` into the new project folder.
+4. Drag folders into Xcode navigator with:
+   - ✅ Copy items if needed
+   - ✅ Add to app target and test target as appropriate
+5. Set app entry to `TrafficLightApp/TrafficLightAppApp.swift`.
+6. In target settings, set Info.plist path to `TrafficLightApp/Resources/Info.plist`.
+7. Ensure `PrivacyInfo.xcprivacy` and `en.lproj/Localizable.strings` are in **Copy Bundle Resources**.
+8. Build and run on a physical iPhone (camera + motion + navigation quality require device testing).
 
-## Suggested App Store listing copy
+## App Store compliance implemented
 
-**App Name:** DriveSense - Intelligent Navigation
+- `NSCameraUsageDescription`
+- `NSLocationWhenInUseUsageDescription`
+- `NSLocationAlwaysAndWhenInUseUsageDescription`
+- `NSMotionUsageDescription`
+- Background modes (`location`, `audio`)
+- iOS 17+ privacy manifest scaffold
 
-**Subtitle:** Never miss a green light with countdown alerts
+## Frameworks and dependencies
 
-**Keywords:** navigation, traffic light, lane assist, speed limit, driver safety, ETA, route planner
+No third-party libraries currently.
+Uses Apple frameworks only: SwiftUI, MapKit, CoreLocation, AVFoundation, Vision, AVFAudio, Combine, UIKit, CoreMotion.
 
-**Description:**
-DriveSense combines smart turn-by-turn navigation with advanced camera-based traffic awareness. Get lane overlays, traffic-sign insights, speed-limit awareness, and confidence-based traffic-light countdown assistance—all in one premium driving app.
+## Suggested App Store listing
 
-## Third-party dependencies
+- **App Name:** DriveSense - Intelligent Navigation
+- **Subtitle:** Never miss a green light with countdown alerts
+- **Keywords:** navigation, traffic light, lane assist, speed limit, driver safety, ETA, route planner
 
-No third-party libraries currently required.
-Frameworks used: SwiftUI, MapKit, CoreLocation, AVFoundation, Vision, AVFAudio, Combine, UIKit.
+## TestFlight checklist (must-do)
 
-## TestFlight release checklist
-
-- [ ] Include app icons in all required sizes (including 1024x1024 App Store icon)
-- [ ] Validate dark mode and accessibility labels (VoiceOver)
-- [ ] Validate camera + navigation in real-world day/night + rain
-- [ ] Confirm permission flows on fresh install and denied states
-- [ ] Verify thermal + battery behavior during 30+ minute sessions
-- [ ] Run full UI and unit tests on iPhone 12+ target matrix
-- [ ] Upload privacy policy and support URL in App Store Connect
-- [ ] Capture screenshots: camera overlay, countdown, navigation, settings
+- [ ] App icon set complete (including 1024x1024)
+- [ ] Permission flows verified on clean installs
+- [ ] Accessibility pass (VoiceOver + contrast + Dynamic Type)
+- [ ] 30+ minute drive soak test (heat/battery/crashes)
+- [ ] Day/night + adverse weather validation
+- [ ] App Store Connect privacy metadata + policy URLs completed
+- [ ] Screenshots captured for Assist, Countdown, Navigation, and Settings

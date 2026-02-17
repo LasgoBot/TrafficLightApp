@@ -16,13 +16,14 @@ struct DriveAssistView: View {
             } else {
                 CameraPreviewView(session: cameraViewModel.cameraManager.session)
                     .ignoresSafeArea()
+                    .accessibilityHidden(true)
 
                 CameraOverlayView(detections: cameraViewModel.detectionResults,
                                   trafficLightDetection: cameraViewModel.trafficLightDetection,
                                   countdown: cameraViewModel.countdown)
                     .ignoresSafeArea()
 
-                if mapViewModel.isCameraInPictureInPicture {
+                if cameraViewModel.configuration.pipEnabled {
                     MapView(navigationViewModel: navigationViewModel, mapViewModel: mapViewModel)
                         .frame(width: 160, height: 220)
                         .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -44,6 +45,23 @@ struct DriveAssistView: View {
                 }
             }
             .padding()
+
+            if let permissionMessage = cameraViewModel.permissionMessage {
+                Color.black.opacity(0.45).ignoresSafeArea()
+                VStack(spacing: 8) {
+                    Image(systemName: "camera.viewfinder")
+                        .font(.largeTitle)
+                    Text(permissionMessage)
+                        .multilineTextAlignment(.center)
+                    Text("Enable permissions in Settings > Privacy.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .padding()
+            }
         }
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
@@ -52,12 +70,14 @@ struct DriveAssistView: View {
                 } label: {
                     Image(systemName: mapMode ? "camera" : "map")
                 }
+                .accessibilityLabel("Toggle camera and map mode")
 
                 Button {
                     showSettings = true
                 } label: {
                     Image(systemName: "slider.horizontal.3")
                 }
+                .accessibilityLabel("Open settings")
             }
         }
         .sheet(isPresented: $showSettings) {
@@ -66,9 +86,13 @@ struct DriveAssistView: View {
                              routePreference: $navigationViewModel.routePreference)
             }
         }
+        .onChange(of: cameraViewModel.configuration.voiceGuidanceEnabled) { enabled in
+            navigationViewModel.voiceGuidanceEnabled = enabled
+        }
         .task {
             cameraViewModel.start()
             navigationViewModel.start()
+            navigationViewModel.voiceGuidanceEnabled = cameraViewModel.configuration.voiceGuidanceEnabled
         }
         .onDisappear {
             cameraViewModel.stop()
@@ -95,5 +119,7 @@ struct DriveAssistView: View {
         .padding(12)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 14))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Driving status")
     }
 }

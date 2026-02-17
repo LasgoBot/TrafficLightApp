@@ -1,5 +1,6 @@
 import AVFoundation
 import Combine
+import CoreMotion
 import Foundation
 import UIKit
 
@@ -9,6 +10,7 @@ final class CameraViewModel: NSObject, ObservableObject {
     @Published var trafficLightDetection: TrafficLightDetection?
     @Published var countdown: TrafficLightCountdown = .init(secondsRemaining: 0, showCountdown: false)
     @Published var reliabilityMessage: String?
+    @Published var permissionMessage: String?
 
     let cameraManager = CameraManager()
 
@@ -26,7 +28,19 @@ final class CameraViewModel: NSObject, ObservableObject {
     }
 
     func start() {
-        cameraManager.start()
+        Task {
+            let cameraGranted = await requestCameraPermission()
+            let motionGranted = requestMotionPermissionIfNeeded()
+            guard cameraGranted else {
+                permissionMessage = "Camera permission is required for detection overlays."
+                return
+            }
+            if !motionGranted {
+                reliabilityMessage = "Motion access denied. Detection accuracy may be reduced."
+            }
+            permissionMessage = nil
+            cameraManager.start()
+        }
     }
 
     func stop() {
@@ -35,6 +49,24 @@ final class CameraViewModel: NSObject, ObservableObject {
 
     private func updateCountdown() {
         countdown = TrafficLightModel.countdown(from: trafficLightDetection, predictedGreenAt: predictedGreenAt)
+    }
+
+    private func requestCameraPermission() async -> Bool {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            return true
+        case .notDetermined:
+            return await AVCaptureDevice.requestAccess(for: .video)
+        case .denied, .restricted:
+            return false
+        @unknown default:
+            return false
+        }
+    }
+
+    private func requestMotionPermissionIfNeeded() -> Bool {
+        guard CMMotionActivityManager.isActivityAvailable() else { return false }
+        return true
     }
 }
 

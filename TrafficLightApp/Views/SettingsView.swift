@@ -43,6 +43,6 @@ struct SettingsView: View {
                 Text("Max FPS \(Int(configuration.maxFPS))")
             }
         }
-        .navigationTitle("Settings")
+        .navigationTitle(String(localized: "settings.title"))
     }
 }

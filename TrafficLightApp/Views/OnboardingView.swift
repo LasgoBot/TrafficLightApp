@@ -8,11 +8,12 @@ struct OnboardingView: View {
             Image(systemName: "car.fill")
                 .font(.system(size: 44))
                 .foregroundStyle(.blue)
+                .accessibilityHidden(true)
 
-            Text("Welcome to DriveSense")
+            Text(String(localized: "onboarding.title"))
                 .font(.title.bold())
 
-            Text("Driver remains responsible for safe operation at all times. This app provides assistive navigation and detection only.")
+            Text(String(localized: "onboarding.disclaimer"))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
 
@@ -20,6 +21,7 @@ struct OnboardingView: View {
                 onAccept()
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityLabel("Accept disclaimer and continue")
         }
         .padding(24)
     }

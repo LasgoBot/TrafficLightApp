@@ -24,6 +24,8 @@ struct CameraOverlayView: View {
             }
         }
         .allowsHitTesting(false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Camera overlay with detected lanes, vehicles, signs, and traffic light status")
     }
 
     private var speedAndLightCard: some View {

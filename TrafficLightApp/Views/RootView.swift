@@ -26,11 +26,17 @@ struct RootView: View {
                     Label("Signals", systemImage: "trafficlight")
                 }
         }
-        .sheet(isPresented: .constant(!onboardingAccepted)) {
+        .sheet(isPresented: onboardingPresentationBinding) {
             OnboardingView {
                 onboardingAccepted = true
             }
             .interactiveDismissDisabled(true)
         }
+    }
+
+    private var onboardingPresentationBinding: Binding<Bool> {
+        Binding(get: { !onboardingAccepted }, set: { value in
+            onboardingAccepted = !value
+        })
     }
 }
