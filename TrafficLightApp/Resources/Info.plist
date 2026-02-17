@@ -17,9 +17,9 @@
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>Location access required for navigation and speed limit detection</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Continuous location for turn-by-turn navigation</string>
+    <string>Continuous location access enables automatic traffic light learning in the background</string>
     <key>NSMotionUsageDescription</key>
-    <string>Motion data helps improve detection accuracy</string>
+    <string>Motion data detects vehicle stops and starts to learn traffic signal timing patterns</string>
 
     <key>UIBackgroundModes</key>
     <array>
@@ -34,6 +34,13 @@
         <key>NSExceptionDomains</key>
         <dict>
             <key>api.example.com</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <false/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+            <key>overpass-api.de</key>
             <dict>
                 <key>NSExceptionAllowsInsecureHTTPLoads</key>
                 <false/>
