@@ -10,6 +10,7 @@ actor TelematicsObservationEngine: TrafficLightObservationProviding {
     private let phasePredictor: SignalPhasePredictor
     
     // MARK: - Initialization
+    init(nodeService: TrafficNodeService = TrafficNodeService(),
          phasePredictor: SignalPhasePredictor = SignalPhasePredictor()) {
         self.nodeService = nodeService
         self.phasePredictor = phasePredictor
